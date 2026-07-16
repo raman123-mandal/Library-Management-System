@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Profile</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f7f6; display: flex; justify-content: center; }
+    .profile-card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); width: 100%; max-width: 450px; }
+    .profile-header { text-align: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
+    .profile-info { margin-bottom: 15px; }
+    .profile-info label { font-weight: bold; color: #555; display: block; margin-bottom: 5px; }
+    .profile-info p { background: #f8f9fa; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin: 0; }
+    .btn-edit { display: block; text-align: center; background-color: #007bff; color: white; padding: 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 20px; }
+    .btn-dashboard { display: block; text-align: center; background-color: #6c757d; color: white; padding: 10px; text-decoration: none; border-radius: 4px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="profile-card">
+    <div class="profile-header">
+      <div style="font-size: 50px;">👤</div>
+      <h2><%= user.name %></h2>
+      <span style="background: #e2e3e5; padding: 3px 10px; border-radius: 50px; font-size: 12px;"><%= user.role.toUpperCase() %></span>
+    </div>
+
+    <div class="profile-info">
+      <label>Full Name</label>
+      <p><%= user.name %></p>
+    </div>
+
+    <div class="profile-info">
+      <label>Email Address</label>
+      <p><%= user.email %></p>
+    </div>
+
+    <a href="/profile/edit" class="btn-edit">Edit Profile</a>
+    <a href="/dashboard" class="btn-dashboard">Back to Dashboard</a>
+  </div>
+</body>
+</html>

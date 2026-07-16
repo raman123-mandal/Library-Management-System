@@ -1,0 +1,428 @@
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const User = require("../model/user");
+const Borrow = require("../model/borrow");
+const Book = require("../model/book");
+
+async function registerUser(req, res) {
+  const { userName, email, password, studentId } = req.body;
+  try {
+    if (!userName || !email || !password || !studentId) {
+      return res.status(400).json({ message: "Please fill all fields" });
+    }
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await User.create({
+      name: userName,
+      email,
+      password: hashedPassword,
+      studentId,
+    });
+    res.redirect("/login");
+  } catch (error) {
+    console.error("Register error:", error.message);
+    res.status(500).json({ message: error.message });
+  }
+}
+
+//Login Function
+async function loginUser(req, res) {
+  const { email, password } = req.body;
+  try {
+    if (!email || !password) {
+      return res.status(400).json({ message: "please fill all fields" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "User does not exist" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+    const token = jwt.sign(
+      {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        studentId: user.studentId,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" },
+    );
+    res.cookie("token", token, { httpOnly: true });
+    if (user.role === 'admin') {
+    return res.redirect('/admin/dashboard');
+} else {
+    return res.redirect('/dashboard');
+}
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+// Add Book
+
+async function addBookHandler(req, res) {
+  const { title, author, isbn, totalCopies, publishedYear, category } =
+    req.body;
+
+  try {
+    // 1. Validate required fields
+    if (!title ||!author ||!isbn ||!totalCopies ||!publishedYear || !category) {
+      return res.status(400).json({
+        message: "Please fill all required fields",
+      });
+    }
+
+    // 2. Check if ISBN already exists
+    const existingBook = await Book.findOne({ isbn });
+
+    if (existingBook) {
+      return res.status(400).json({
+        message: "Book with this ISBN already exists",
+      });
+    }
+
+    // 3. Create new book
+    const book = new Book({ title, author,  isbn,publishedYear,  category, totalCopies, availableCopies: totalCopies, // Initially all books are available
+})
+    // 4. Save book
+    await book.save();
+    // 5. Redirect to books page
+    return res.redirect("/addbook?message=Book added successfully");
+
+    // If you're building an API instead of EJS, use:
+    // return res.status(201).json({ message: "Book added successfully", book });
+  } catch (error) {
+    console.error("Add Book Error:", error);
+
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+}
+
+//view All Books
+
+async function handleViewBooks(req,res){
+  try{
+    const books = await Book.find({});
+
+     res.render('viewBooks', { books:books, user: req.user });
+  }catch(error){
+    console.error("Error fetching books:", error);
+    res.status(500).json({message:"Internal Server Error"});
+  } 
+}
+
+//Edit book
+
+async function editBookHandler(req, res) {
+  const { id } = req.params;
+  try {
+    const book = await Book.findById(id);
+    if (!book) return res.status(404).json({ message: 'Book not found' });
+
+    // Agar user page khol raha hai (GET request)
+    if (req.method === 'GET') {
+      return res.render('editBook', { user: req.user, book });
+    }
+
+    // Agar user form submit kar raha hai (POST request)
+    const { title, author, isbn, availableCopies } = req.body;
+    
+    if (!title || !author || !isbn || !availableCopies) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    // Database me values update karna
+    book.title = title;
+    book.author = author;
+    book.isbn = isbn;
+    book.availableCopies = availableCopies;
+    
+    await book.save();
+    
+    // Sahi route par redirect karna (jahan saari books dikhti hain)
+    res.redirect('/viewBooks'); 
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
+//delete book
+
+async function deleteBookHandler(req,res){
+  const {id} = req.params;
+  try{
+    const book = await Book.findByIdAndDelete(id);
+    if(!book) return res.status(404).json({message:'Book not found'});
+    res.redirect('/viewBooks');
+  }catch(error){
+    res.status(500).json({message:error.message});
+  }
+}
+
+//search book 
+
+// 1. Handler Function
+async function searchBooksHandler(req, res) {
+  const query = req.query.q; // Form se 'q' naam ka input milega
+  
+  if (!query) {
+    // Agar koi search query nahi hai, to khali page render karo
+    return res.render('search');
+  }
+
+  try {
+    // $regex ka use karke Title, Author, ya Category me partial match dhoondenge 
+    // 'i' ka matlab hai case-insensitive (chote-bade letters ka farq nahi padega)
+    const books = await Book.find({
+      $or: [
+        { title: { $regex: query, $options: 'i' } },
+        { author: { $regex: query, $options: 'i' } },
+        { category: { $regex: query, $options: 'i' } }
+      ]
+    });
+
+    // Results ke sath search page render karo
+    res.render('search', { books, query });
+  } catch (error) {
+    console.error("Search error:", error);
+    res.status(500).send("Search karne me koi dikkat aayi.");
+  }
+}
+
+// Borrow Book
+
+async function handleBorrowBook(req, res) {
+  const { bookId } = req.params;
+  const studentId = req.user.id; 
+
+  try {
+    const book = await Book.findById(bookId);
+    if (!book) {
+      return res.redirect('/viewBooks?error=Book not found');
+    }
+
+    if (book.availableCopies <= 0) {
+      return res.redirect('/viewBooks?error=No copies available');
+    }
+
+    // Same book returnDate: null ke sath check karein
+    const existingBorrow = await Borrow.findOne({ studentId, bookId, returnDate: null });
+    if (existingBorrow) {
+      return res.redirect('/viewBooks?error=You already borrowed this book');
+    }
+
+    // 1. Due Date calculate karein (Maan lijiye book 14 din ke liye deni hai)
+    const today = new Date();
+    const durationInDays = 14; 
+    const calculatedDueDate = new Date(today.getTime() + durationInDays * 24 * 60 * 60 * 1000);
+
+    // 2. Book ki copy kam karein
+    book.availableCopies -= 1;
+    await book.save();
+
+    // 3. Naya borrow record banayein (Sirf required fields ke sath)
+    const borrowRecord = new Borrow({
+      studentId: studentId,
+      bookId: bookId,
+      dueDate: calculatedDueDate // Yeh dena zaroori tha schema ke mutabik
+      // Baaki saare fields (borrowDate, status, fine, returnDate) khud ba khud default set ho jayenge!
+    });
+    await borrowRecord.save();
+
+    res.redirect('/viewBooks?message=Book borrowed successfully');
+  } catch (error) {
+    console.error('Borrow book error:', error);
+    res.redirect('/viewBooks?error=Something went wrong');
+  }
+}
+
+//return book
+
+async function handleReturnBook(req, res) {
+  const { borrowId } = req.params;
+
+  try {
+    const borrowRecord = await Borrow.findById(borrowId).populate('bookId');
+    if (!borrowRecord) {
+      return res.redirect('/viewBorrows?error=Borrow record not found');
+    }
+
+    if (borrowRecord.returnDate || borrowRecord.status === 'returned') {
+      return res.redirect('/viewBorrows?error=Book already returned');
+    }
+
+    const today = new Date();
+    borrowRecord.returnDate = today;
+    borrowRecord.status = 'returned';
+
+    if (today > borrowRecord.dueDate) {
+      const daysLate = Math.ceil((today - borrowRecord.dueDate) / (1000 * 60 * 60 * 24));
+      borrowRecord.fine = daysLate * 10;
+    }
+
+    await borrowRecord.save();
+
+    const book = await Book.findById(borrowRecord.bookId._id);
+    if (book) {
+      book.availableCopies += 1;
+      await book.save();
+    }
+
+    //  Student dashboard (/myBorrows) ki jagah Admin view (/viewBorrows) par bhejein
+    res.redirect('/viewBorrows?message=Book returned successfully');
+
+  } catch (error) {
+    console.error('Return book error:', error);
+    res.redirect('/viewBorrows?error=Something went wrong');
+  }
+}
+
+//Admin Dashboard Handler
+
+async function adminDashboardHandler(req,res) {
+  try {
+    // 1. Total Users ka count
+    const totalUsers = await User.countDocuments({ role: 'Student' });
+
+    // 2. Library me total unique books kitni hain
+    const totalBooks = await Book.countDocuments({});
+
+    // 3. Available Books (Saari books ke availableCopies ka sum)
+    const booksData = await Book.aggregate([
+      { $group: { _id: null, totalAvailable: { $sum: "$availableCopies" } } }
+    ]);
+    const availableBooks = booksData[0]?.totalAvailable || 0;
+
+    // 4. Borrowed Books (Jo abhi tak returned nahi hui hain)
+    const borrowedBooks = await Borrow.countDocuments({ status: 'borrowed' });
+
+    // 5. Overdue Books (Status borrowed hai aur dueDate aaj se purani hai)
+    const overdueBooks = await Borrow.countDocuments({
+      status: 'borrowed',
+      dueDate: { $lt: new Date() } // Aaj ki tarikh se choti date wale
+    });
+
+    // Saare data ko ek object me pack karke render karein
+    res.render('adminDashboard', {
+      stats: { totalUsers, totalBooks, availableBooks, borrowedBooks, overdueBooks }
+    });
+
+  } catch (error) {
+    console.error("Dashboard error:", error);
+    res.status(500).send("Dashboard data load karne me dikkat aayi.");
+  }
+}
+
+//dashboard Handler
+
+async function dashboardHandler(req, res) {
+  try {
+    const studentId = req.user.id;
+
+    // 1. Saare ke saare borrow records le aao (chahe returned hon ya borrowed)
+    const allBorrows = await Borrow.find({ studentId }).populate('bookId');
+
+    // 2. Sirf wo kitabein jo abhi tak wapas nahi ki hain (Pending/Borrowed)
+    const pendingBooksList = allBorrows.filter(book => book.status === 'borrowed');
+    const pendingBooksCount = pendingBooksList.length;
+
+    // 3. Sirf wo kitabein jo wapas ho chuki hain (Returned)
+    const returnedBooksList = allBorrows.filter(book => book.status === 'returned');
+
+    // 4. Kul milakar kitna fine (jurmana) hua hai (Saari entries ka total fine)
+    const totalFine = allBorrows.reduce((sum, record) => sum + (record.fine || 0), 0);
+
+    // EJS page render karein saare zaroori data ke sath
+    res.render('dashboard', {
+      borrowBooks: allBorrows,         // Saari list
+      returnBooks: returnedBooksList,   // Sirf returned list
+      pendingBooks: pendingBooksCount,  // Pending ka count
+      totalFine: totalFine              // Total fine amount
+    });
+
+  } catch (error) {
+    console.error("Dashboard error:", error);
+    res.status(500).send("Dashboard load karne me koi dikkat aayi.");
+  }
+}
+
+async function handleViewBorrows(req, res) {
+  try {
+    // 1. Saare borrow records le aao (jo studentId ke hisaab se hain)
+    const borrows = await Borrow.find({ studentId: req.user.id }).populate('bookId'); // Book ka details bhi lao
+
+    // 2. Render karo viewBorrows.ejs page ke sath
+    res.render('viewBorrows', { borrows });
+  } catch (error) {
+    console.error("Error fetching borrows:", error);
+    res.status(500).send("Borrows fetch karne me dikkat aayi.");
+  }
+}
+
+//view student profile
+
+async function handleViewProfile(req, res) {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+    res.render('profile', { user });
+  } catch (error) {
+    console.error("Profile error:", error);
+    res.status(500).send("Error fetching profile");
+  }
+}
+
+//edite profile
+
+async function handleEditeProfile(req,res){
+  try {
+    const user = await User.findById(req.user.id);
+    res.render('updateProfile', { user });
+  } catch (error) {
+    res.status(500).send("Error loading edit page");
+  }
+}
+
+//update profile
+
+async function handleUpdateProfile(req, res) {
+  const { name, email, newPassword } = req.body;
+  try {
+    if (!name || !email) {
+      return res.redirect('/profile/edit?error=Fields cannot be empty');
+    }
+
+    // 1. Pehle variable ko achhe se declare karein
+    let updateData = { name, email };
+
+    // 2. Agar password badalna hai toh usko encrypt karke jodein
+    if (newPassword && newPassword.trim() !== "") {
+      const bcrypt = require('bcrypt');
+      const salt = await bcrypt.genSalt(10);
+      updateData.password = await bcrypt.hash(newPassword, salt);
+    }
+
+    // 3. Database me update karein
+    await User.findByIdAndUpdate(req.user.id, { $set: updateData });
+
+    res.redirect('/profile?message=Profile updated successfully');
+  } catch (error) {
+    console.error("Profile update error:", error);
+    res.redirect('/profile/edit?error=Something went wrong');
+  }
+}
+module.exports = { registerUser, loginUser ,addBookHandler,handleViewBooks,editBookHandler,deleteBookHandler,searchBooksHandler,handleBorrowBook,handleReturnBook,adminDashboardHandler,dashboardHandler,handleViewBorrows,handleViewProfile,handleEditeProfile,handleUpdateProfile};

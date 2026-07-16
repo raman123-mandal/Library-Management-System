@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Update Profile</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f7f6; display: flex; justify-content: center; }
+    .profile-card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); width: 100%; max-width: 450px; }
+    .profile-info { margin-bottom: 15px; }
+    .profile-info label { font-weight: bold; color: #555; display: block; margin-bottom: 5px; }
+    .profile-info input { width: 95%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; }
+    .btn-save { display: block; width: 100%; background-color: #28a745; color: white; padding: 10px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+    .btn-cancel { display: block; text-align: center; background-color: #dc3545; color: white; padding: 10px; text-decoration: none; border-radius: 4px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="profile-card">
+    <h2>Update Profile Details</h2>
+    
+    <form action="/profile/update" method="POST">
+      <div class="profile-info">
+        <label>Full Name</label>
+        <input type="text" name="name" value="<%= user.name %>" required />
+      </div>
+
+      <div class="profile-info">
+        <label>Email Address</label>
+        <input type="email" name="email" value="<%= user.email %>" required />
+      </div>
+
+      <div class="profile-info">
+        <label>New Password (Optional)</label>
+        <input type="password" name="newPassword" placeholder="Leave blank to keep current password" />
+      </div>
+
+      <button type="submit" class="btn-save">Save Changes</button>
+    </form>
+
+    <a href="/profile" class="btn-cancel">Cancel</a>
+  </div>
+</body>
+</html>

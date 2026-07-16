@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add New Book | Admin Panel</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background-color: #f4f7f6;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    
+    /* 1. Top Navigation Bar */
+    .navbar {
+      background-color: #1a252f;
+      color: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .navbar h1 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+    .navbar-links a {
+      color: #bdc3c7;
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 600;
+      transition: color 0.3s;
+    }
+    .navbar-links a:hover {
+      color: #e74c3c;
+    }
+
+    /* Form Container Layout */
+    .content-wrapper {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 20px;
+    }
+    .form-container {
+      background: white;
+      padding: 35px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      width: 100%;
+      max-width: 650px;
+      border-top: 5px solid #e74c3c;
+    }
+    .form-header {
+      margin-bottom: 25px;
+      border-bottom: 2px solid #f0f0f0;
+      padding-bottom: 10px;
+    }
+    .form-header h2 {
+      color: #2c3e50;
+      font-size: 24px;
+    }
+    .form-header p {
+      color: #7f8c8d;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group.full-width {
+      grid-column: span 2;
+    }
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #34495e;
+    }
+    .form-group input, 
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+    .form-group input:focus, 
+    .form-group textarea:focus {
+      border-color: #e74c3c;
+    }
+    .form-group textarea {
+      resize: vertical;
+    }
+    .button-group {
+      display: flex;
+      gap: 15px;
+      margin-top: 25px;
+    }
+    .btn {
+      flex: 1;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      transition: background 0.3s;
+    }
+    .btn-submit {
+      background-color: #e74c3c;
+      color: white;
+    }
+    .btn-submit:hover {
+      background-color: #c0392b;
+    }
+    .btn-cancel {
+      background-color: #bdc3c7;
+      color: #333;
+    }
+    .btn-cancel:hover {
+      background-color: #95a5a6;
+    }
+    
+    @media (max-width: 600px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-group.full-width {
+        grid-column: span 1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP NAVIGATION BAR -->
+  <div class="navbar">
+    <h1>🛡️ Admin Panel</h1>
+    <div class="navbar-links">
+      <a href="/admin/dashboard">⬅️ Back to Dashboard</a>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT AREA -->
+  <div class="content-wrapper">
+    <div class="form-container">
+      <div class="form-header">
+        <h2>➕ Add New Book</h2>
+        <p>Enter the complete details of the book to add it to the library catalog.</p>
+      </div>
+
+      <form action="/addbook" method="POST">
+        <div class="form-grid">
+          
+          <!-- Title -->
+          <div class="form-group full-width">
+            <label for="title">Book Title</label>
+            <input type="text" id="title" name="title" placeholder="e.g. The Night King" required>
+          </div>
+
+          <!-- Author -->
+          <div class="form-group">
+            <label for="author">Author</label>
+            <input type="text" id="author" name="author" placeholder="Author's name" required>
+          </div>
+
+          <!-- ISBN -->
+          <div class="form-group">
+            <label for="isbn">ISBN Number</label>
+            <input type="text" id="isbn" name="isbn" placeholder="Standard book identification" required>
+          </div>
+
+          <!-- Published Year -->
+          <div class="form-group">
+            <label for="publishedYear">Published Year</label>
+            <input type="number" id="publishedYear" name="publishedYear" min="0" placeholder="YYYY" required>
+          </div>
+
+          <!-- Category -->
+          <div class="form-group">
+            <label for="category">Category / Genre</label>
+            <input type="text" id="category" name="category" placeholder="Fiction, Tech, Science etc." required>
+          </div>
+
+          <!-- Total Copies -->
+          <div class="form-group">
+            <label for="totalCopies">Total Copies</label>
+            <input type="number" id="totalCopies" name="totalCopies" min="0" placeholder="0" required>
+          </div>
+
+          <!-- Available Copies -->
+          <div class="form-group">
+            <label for="availableCopies">Available Copies</label>
+            <input type="number" id="availableCopies" name="availableCopies" min="0" placeholder="0" required>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group full-width">
+            <label for="description">Book Description</label>
+            <textarea id="description" name="description" rows="4" placeholder="Brief summary of the book..."></textarea>
+          </div>
+
+        </div>
+
+        <!-- Form Action Buttons -->
+        <div class="button-group">
+          <button type="submit" class="btn btn-submit">Add Book</button>
+          <a href="/admin/dashboard" class="btn btn-cancel">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>

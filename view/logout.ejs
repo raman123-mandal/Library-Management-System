@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Logout</title>
+</head>
+<body>
+  <!-- Aapke website ke Header ya Navbar me -->
+<div class="navbar-right">
+  <span class="user-name">Hello, User!</span>
+  
+  <!-- Logout Form -->
+  <form action="/logout" method="POST" style="display: inline;">
+    <button type="submit" class="btn-logout">Logout</button>
+  </form>
+</div>
+
+<style>
+  /* Logout button ko ek clean look dene ke liye */
+  .btn-logout {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    margin-left: 10px;
+  }
+  .btn-logout:hover {
+    background-color: #c82333;
+  }
+</style>
+</body>
+</html>

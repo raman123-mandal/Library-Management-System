@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search Books - Library Management System</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background-color: #f4f7f6;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .header-area {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    h2 { color: #333; margin: 0; }
+    .btn-back {
+      background-color: #6c757d;
+      color: white;
+      padding: 8px 15px;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    /* Search Bar Design */
+    .search-box {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      margin-bottom: 30px;
+      display: flex;
+      gap: 15px;
+    }
+    .search-input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    .btn-search {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 10px 25px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .btn-search:hover { background-color: #218838; }
+    
+    /* Table Design */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #343a40;
+      color: white;
+      font-weight: bold;
+    }
+    tr:hover { background-color: #f5f5f5; }
+    .no-results {
+      text-align: center;
+      color: #777;
+      padding: 30px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-area">
+      <h2>Search Library Books</h2>
+      <a href="/viewBooks" class="btn-back">← Back to All Books</a>
+    </div>
+
+    <!-- Search Form (GET request use karenge taaki URL me query dikhe) -->
+    <form action="/search" method="GET" class="search-box">
+      <input 
+        type="text" 
+        name="q" 
+        class="search-input" 
+        placeholder="Search by Title, Author, or Category..." 
+        value="<%= typeof query !== 'undefined' ? query : '' %>"
+        required
+      >
+      <button type="submit" class="btn-search">Search</button>
+    </form>
+
+    <!-- Search Results Table -->
+    <% if (typeof books !== 'undefined' && books.length > 0) { %>
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Category</th>
+            <th>Available Copies</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% books.forEach(function(book) { %>
+            <tr>
+              <td><strong><%= book.title %></strong></td>
+              <td><%= book.author %></td>
+              <td><%= book.category %></td>
+              <td><%= book.availableCopies %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    <% } else if (typeof query !== 'undefined') { %>
+      <!-- Agar user ne search kiya par kuch nahi mila -->
+      <div class="no-results">
+        <h3>No books found matching "<%= query %>"</h3>
+        <p>Kripya sahi spelling check karein ya kuch aur search karein.</p>
+      </div>
+    <% } else { %>
+      <!-- Jab user pehli baar page par aayega (khali search page) -->
+      <div class="no-results">
+        <p>Upar search box me book ka naam ya author likh kar search karein.</p>
+      </div>
+    <% } %>
+  </div>
+
+</body>
+</html>

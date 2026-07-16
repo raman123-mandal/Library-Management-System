@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Catalog</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        body {
+            background-color: #f4f7f6;
+            color: #333;
+            padding-bottom: 40px;
+        }
+        .navbar {
+            background-color: #1a252f;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .navbar h1 { font-size: 20px; }
+        .navbar a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        th, td {
+            padding: 14px 18px;
+            border-bottom: 1px solid #eee;
+        }
+        th {
+            background-color: #34495e;
+            color: white;
+            font-weight: 600;
+        }
+        tr:hover { background-color: #fcfcfc; }
+        
+        /* Buttons Styling */
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 13px;
+            display: inline-block;
+            font-weight: bold;
+            margin-right: 5px;
+            transition: opacity 0.2s;
+        }
+        .btn:hover { opacity: 0.9; }
+        .btn-edit { background-color: #ffc107; color: #212529; }
+        .btn-delete { background-color: #dc3545; color: white; }
+        .btn-issue { background-color: #2ecc71; color: white; }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <h1>📚 Library Catalog</h1>
+        <a href="javascript:history.back()">⬅️ Go Back</a>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+        <h2>Available Books</h2>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Category</th>
+                        <th>Available Copies</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (typeof books !== 'undefined' && books && books.length > 0) { %>
+                        <% books.forEach(function(book) { %>
+                            <tr>
+                                <td><strong><%= book.title %></strong></td>
+                                <td><%= book.author %></td>
+                                <td><%= book.category || 'General' %></td>
+                                <td><%= book.availableCopies %></td>
+                                <td>
+                                    <% if (typeof user !== 'undefined' && user && user.role) { %>
+                                        
+                                        <!-- Safe Role Conversion to Lowercase -->
+                                        <% var currentRole = user.role.toLowerCase(); %>
+
+                                        <!-- CASE FIX: Agar Admin (Capital A) hai -->
+                                        <% if (currentRole === 'admin') { %>
+                                            <a href="/book/edit/<%= book._id %>" class="btn btn-edit">Edit</a>
+                                            <form action="/book/delete/<%= book._id %>" method="POST" style="display: inline;" onsubmit="return confirm('Delete this book?')">
+                                                <button type="submit" class="btn btn-delete">Delete</button>
+                                            </form>
+                                        <% } %>
+
+                                        <!-- CASE FIX: Agar Student (Capital S) hai -->
+                                        <% if (currentRole === 'student') { %>
+                                            <% if (book.availableCopies > 0) { %>
+                                                <a href="/borrow/<%= book._id %>" class="btn btn-issue">Borrow Book</a>
+                                            <% } else { %>
+                                                <span style="color:#c0392b; font-weight:bold; font-size:13px;">Out of Stock</span>
+                                            <% } %>
+                                        <% } %>
+
+                                    <% } else { %>
+                                        <!-- Fallback: Agar kisi wajah se user object na aaye to text alert -->
+                                        <span style="color:#e67e22; font-size:13px;">Session Error</span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: #999; padding: 30px;">
+                                No books found in the database.
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>
