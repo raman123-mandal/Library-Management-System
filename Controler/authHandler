@@ -411,7 +411,6 @@ async function handleUpdateProfile(req, res) {
 
     // 2. Agar password badalna hai toh usko encrypt karke jodein
     if (newPassword && newPassword.trim() !== "") {
-      const bcrypt = require('bcrypt');
       const salt = await bcrypt.genSalt(10);
       updateData.password = await bcrypt.hash(newPassword, salt);
     }
